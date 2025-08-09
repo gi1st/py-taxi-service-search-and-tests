@@ -247,7 +247,11 @@ class PublicManufacturerDeleteViewTest(TestCase):
 
 class PrivateManufacturerDeleteViewTest(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username="test", password="12345")
+        self.user = User.objects.create_user(
+            username="test",
+            password="1qazcde3",
+            license_number="ASD12345"
+        )
         self.client.force_login(self.user)
         self.manufacturer = Manufacturer.objects.create(
             name="DelName", country="DelCountry"
