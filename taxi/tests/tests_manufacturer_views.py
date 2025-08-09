@@ -9,12 +9,14 @@ User = get_user_model()
 
 MANUFACTURER_LIST_URL = reverse("taxi:manufacturer-list")
 MANUFACTURER_CREATE_URL = reverse("taxi:manufacturer-create")
-MANUFACTURER_UPDATE_URL = lambda pk: reverse(
-    "taxi:manufacturer-update", args=[pk]
-)
-MANUFACTURER_DELETE_URL = lambda pk: reverse(
-    "taxi:manufacturer-delete", args=[pk]
-)
+
+
+def manufacturer_update_url(pk):
+    return reverse("taxi:manufacturer-update", args=[pk])
+
+
+def manufacturer_delete_url(pk):
+    return reverse("taxi:manufacturer-delete", args=[pk])
 
 
 class PublicManufacturerListTest(TestCase):
@@ -33,7 +35,7 @@ class PrivateManufacturerListTest(TestCase):
         self.client.force_login(self.user)
         for manufacturer in range(7):
             Manufacturer.objects.create(
-                name=f"name{manufacturer}", country=f"country"
+                name=f"name{manufacturer}", country="country"
             )
 
     def test_manufacturer_list_status_and_template(self):
@@ -172,7 +174,7 @@ class PrivateManufacturerCreateViewTest(TestCase):
 
 class PublicManufacturerUpdteViewTest(TestCase):
     def test_login_required(self):
-        response = self.client.get(MANUFACTURER_UPDATE_URL)
+        response = self.client.get(manufacturer_update_url)
         self.assertNotEqual(response.status_code, 200)
 
 
@@ -188,12 +190,12 @@ class PrivateManufacturerUpdateViewTest(TestCase):
 
     def test_login_required(self):
         self.client.logout()
-        url = MANUFACTURER_UPDATE_URL(self.manufacturer.pk)
+        url = manufacturer_update_url(self.manufacturer.pk)
         response = self.client.get(url)
         assert response.status_code != 200
 
     def test_get_update_view_loads_correct_template_and_fills_form(self):
-        url = MANUFACTURER_UPDATE_URL(self.manufacturer.pk)
+        url = manufacturer_update_url(self.manufacturer.pk)
         response = self.client.get(url)
         assert response.status_code == 200
         assert "taxi/manufacturer_form.html" in [
@@ -204,7 +206,7 @@ class PrivateManufacturerUpdateViewTest(TestCase):
         assert form_initial["country"] == self.manufacturer.country
 
     def test_successful_update_redirects_and_changes_data(self):
-        url = MANUFACTURER_UPDATE_URL(self.manufacturer.pk)
+        url = manufacturer_update_url(self.manufacturer.pk)
         data = {"name": "UpdatedName", "country": "UpdatedCountry"}
         count_before = Manufacturer.objects.count()
         response = self.client.post(url, data)
@@ -215,7 +217,7 @@ class PrivateManufacturerUpdateViewTest(TestCase):
         assert Manufacturer.objects.count() == count_before
 
     def test_update_fails_with_invalid_data(self):
-        url = MANUFACTURER_UPDATE_URL(self.manufacturer.pk)
+        url = manufacturer_update_url(self.manufacturer.pk)
         data = {"name": "", "country": ""}
         count_before = Manufacturer.objects.count()
         response = self.client.post(url, data)

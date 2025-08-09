@@ -110,10 +110,11 @@ class DriverModelTest(TestCase):
         self.assertEqual(max_length, 255)
 
     def test_str(self):
-        self.assertEqual(
-            str(self.driver),
-            f"{self.driver.username} ({self.driver.first_name} {self.driver.last_name})",
+        expected = (
+            f"{self.driver.username} "
+            f"({self.driver.first_name} {self.driver.last_name})"
         )
+        self.assertEqual(str(self.driver), expected)
 
     def test_get_absolute_url(self):
         excepted_url = f"/drivers/{self.driver.id}/"
