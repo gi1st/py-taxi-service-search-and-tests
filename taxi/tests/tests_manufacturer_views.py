@@ -172,16 +172,22 @@ class PrivateManufacturerCreateViewTest(TestCase):
         self.assertEqual(Manufacturer.objects.count(), count_before)
 
 
-class PublicManufacturerUpdteViewTest(TestCase):
+class PublicManufacturerUpdateViewTest(TestCase):
+    def setUp(self):
+        self.manufacturer = Manufacturer.objects.create(
+            name="TestName", country="TestCountry"
+        )
+
     def test_login_required(self):
-        response = self.client.get(manufacturer_update_url)
+        url = manufacturer_update_url(self.manufacturer.pk)
+        response = self.client.get(url)
         self.assertNotEqual(response.status_code, 200)
 
 
 class PrivateManufacturerUpdateViewTest(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(
-            username="test", password="1qazcde3"
+            username="test", password="1qazcde3", license_number="ASD12345"
         )
         self.client.force_login(self.user)
         self.manufacturer = Manufacturer.objects.create(
@@ -192,41 +198,41 @@ class PrivateManufacturerUpdateViewTest(TestCase):
         self.client.logout()
         url = manufacturer_update_url(self.manufacturer.pk)
         response = self.client.get(url)
-        assert response.status_code != 200
+        self.assertNotEqual(response.status_code, 200)
 
     def test_get_update_view_loads_correct_template_and_fills_form(self):
         url = manufacturer_update_url(self.manufacturer.pk)
         response = self.client.get(url)
-        assert response.status_code == 200
-        assert "taxi/manufacturer_form.html" in [
-            t.name for t in response.templates
-        ]
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(
+            "taxi/manufacturer_form.html", [t.name for t in response.templates]
+        )
         form_initial = response.context["form"].initial
-        assert form_initial["name"] == self.manufacturer.name
-        assert form_initial["country"] == self.manufacturer.country
+        self.assertEqual(form_initial["name"], self.manufacturer.name)
+        self.assertEqual(form_initial["country"], self.manufacturer.country)
 
     def test_successful_update_redirects_and_changes_data(self):
         url = manufacturer_update_url(self.manufacturer.pk)
         data = {"name": "UpdatedName", "country": "UpdatedCountry"}
         count_before = Manufacturer.objects.count()
         response = self.client.post(url, data)
-        assert response.status_code == 302
+        self.assertEqual(response.status_code, 302)
         self.manufacturer.refresh_from_db()
-        assert self.manufacturer.name == data["name"]
-        assert self.manufacturer.country == data["country"]
-        assert Manufacturer.objects.count() == count_before
+        self.assertEqual(self.manufacturer.name, data["name"])
+        self.assertEqual(self.manufacturer.country, data["country"])
+        self.assertEqual(Manufacturer.objects.count(), count_before)
 
     def test_update_fails_with_invalid_data(self):
         url = manufacturer_update_url(self.manufacturer.pk)
         data = {"name": "", "country": ""}
         count_before = Manufacturer.objects.count()
         response = self.client.post(url, data)
-        assert response.status_code == 200
-        assert response.context["form"].errors
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context["form"].errors)
         self.manufacturer.refresh_from_db()
-        assert self.manufacturer.name == "TestName"
-        assert self.manufacturer.country == "TestCountry"
-        assert Manufacturer.objects.count() == count_before
+        self.assertEqual(self.manufacturer.name, "TestName")
+        self.assertEqual(self.manufacturer.country, "TestCountry")
+        self.assertEqual(Manufacturer.objects.count(), count_before)
 
 
 class PublicManufacturerDeleteViewTest(TestCase):
